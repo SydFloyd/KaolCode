@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
@@ -11,6 +11,7 @@ from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Resp
 
 from codex_home.config import Settings, get_settings
 from codex_home.db import build_engine, build_session_factory, init_db
+from codex_home.github_api import GitHubAppClient
 from codex_home.logging_utils import configure_logging
 from codex_home.metrics import AGENTS_ENABLED, JOBS_CREATED, PENDING_APPROVALS, QUEUE_DEPTH, render_metrics
 from codex_home.policy import load_policy, load_repo_profiles
@@ -25,6 +26,7 @@ from codex_home.types import (
     JobStatus,
     RejectRequest,
     RiskClass,
+    TextIntakeRequest,
     WebhookResult,
 )
 
@@ -144,6 +146,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if not profile or not profile.enabled:
                 return WebhookResult(accepted=False, message=f"Repo disabled: {repo_name}")
 
+            latest = repository.latest_job_for_issue(repo_name, int(issue_number))
+            if latest:
+                if latest.status in {
+                    JobStatus.QUEUED.value,
+                    JobStatus.RUNNING.value,
+                    JobStatus.AWAITING_APPROVAL.value,
+                }:
+                    return WebhookResult(accepted=False, message=f"Job already in progress: {latest.job_id}")
+                if latest.created_at >= (_utc_now() - timedelta(minutes=2)):
+                    return WebhookResult(accepted=False, message=f"Duplicate webhook ignored: {latest.job_id}")
+
             spec = JobSpecV1(
                 repo=repo_name,
                 issue_number=int(issue_number),
@@ -193,6 +206,52 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             created = repository.create_job(spec)
             enqueue_job(settings, redis_client, created.job_id)
             JOBS_CREATED.labels(source="manual").inc()
+            return _build_job_response(created)
+
+    @app.post(
+        "/api/v1/intake/text",
+        response_model=JobResponse,
+        dependencies=[Depends(operator_auth_dependency)],
+    )
+    def intake_text(payload: TextIntakeRequest = Body(...)) -> JobResponse:
+        if not policy.repo_allowed(payload.repo):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Repo not in allowlist.")
+
+        github = GitHubAppClient(settings)
+        labels = sorted({label for label in payload.labels if label.lower() != "agent-ready"})
+        try:
+            issue = github.create_issue(
+                repo=payload.repo,
+                title=payload.title,
+                body=payload.body,
+                labels=labels,
+            )
+        except RuntimeError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+        with session_factory() as session:
+            repository = Repository(session)
+            profile = repository.get_repo_profile(payload.repo)
+            if not profile or not profile.enabled:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Repo profile not enabled.")
+
+            caps = payload.caps or policy.default_caps
+            spec = JobSpecV1(
+                repo=payload.repo,
+                issue_number=issue.number,
+                base_branch=payload.base_branch or profile.default_base_branch,
+                risk_class=payload.risk_class,
+                model_profile=payload.model_profile,
+                allowed_paths=payload.allowed_paths or profile.allowed_paths,
+                acceptance_commands=payload.acceptance_commands or profile.acceptance_commands,
+                caps=caps,
+                requires_approval=policy.required_approvals(payload.risk_class),
+                created_by=payload.created_by,
+                created_at=_utc_now(),
+            )
+            created = repository.create_job(spec)
+            enqueue_job(settings, redis_client, created.job_id)
+            JOBS_CREATED.labels(source="text_intake").inc()
             return _build_job_response(created)
 
     @app.get(

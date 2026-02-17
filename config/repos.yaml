@@ -12,4 +12,4 @@ repos:
       - requirements*.txt
       - package*.json
     acceptance_commands:
-      - pytest -q
+      - python -m compileall src

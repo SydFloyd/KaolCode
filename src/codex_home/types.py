@@ -79,6 +79,20 @@ class JobCreateRequest(BaseModel):
     caps: Caps | None = None
 
 
+class TextIntakeRequest(BaseModel):
+    repo: str
+    title: str = Field(min_length=4, max_length=200)
+    body: str = ""
+    labels: list[str] = Field(default_factory=list)
+    risk_class: RiskClass = RiskClass.CODE
+    model_profile: ModelProfile = ModelProfile.BUILD
+    created_by: str = "operator"
+    base_branch: str | None = None
+    acceptance_commands: list[str] = Field(default_factory=list)
+    allowed_paths: list[str] = Field(default_factory=list)
+    caps: Caps | None = None
+
+
 class JobResponse(BaseModel):
     job_id: UUID
     status: JobStatus
@@ -108,4 +122,3 @@ class WebhookResult(BaseModel):
     accepted: bool
     message: str
     job_id: UUID | None = None
-

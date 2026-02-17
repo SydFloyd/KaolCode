@@ -22,6 +22,23 @@ curl -X POST "http://localhost:8080/api/v1/jobs" \
   }'
 ```
 
+## Create issue + queue job from plain text
+
+```bash
+curl -X POST "http://localhost:8080/api/v1/intake/text" \
+  -H "Content-Type: application/json" \
+  -H "X-Operator-Token: ${OPERATOR_TOKEN}" \
+  -d '{
+    "repo": "SydFloyd/KaolCode",
+    "title": "Fix flaky test around queue retries",
+    "body": "Investigate nondeterministic retry timing and propose a minimal fix.",
+    "labels": ["pilot"],
+    "risk_class": "code",
+    "model_profile": "build",
+    "created_by": "operator"
+  }'
+```
+
 ## Approve gated job
 
 ```bash

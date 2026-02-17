@@ -49,6 +49,16 @@ class Repository:
     def get_job(self, job_id: str) -> Job | None:
         return self.session.get(Job, job_id)
 
+    def latest_job_for_issue(self, repo: str, issue_number: int) -> Job | None:
+        stmt = (
+            select(Job)
+            .where(Job.repo == repo)
+            .where(Job.issue_number == issue_number)
+            .order_by(desc(Job.created_at))
+            .limit(1)
+        )
+        return self.session.execute(stmt).scalar_one_or_none()
+
     def list_job_events(self, job_id: str) -> list[JobEvent]:
         stmt = select(JobEvent).where(JobEvent.job_id == job_id).order_by(JobEvent.created_at.asc())
         return list(self.session.execute(stmt).scalars())

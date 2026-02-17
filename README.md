@@ -7,13 +7,14 @@ Safety-first local coding-agent platform optimized for externally useful output.
 - FastAPI orchestrator with required REST endpoints:
   - `POST /api/v1/webhooks/github`
   - `POST /api/v1/jobs`
+  - `POST /api/v1/intake/text`
   - `GET /api/v1/jobs/{job_id}`
   - `POST /api/v1/jobs/{job_id}/approve`
   - `POST /api/v1/jobs/{job_id}/reject`
   - `POST /api/v1/control/kill-switch`
   - `POST /api/v1/control/resume`
   - `GET /metrics`
-- Worker process using Redis queue (RQ) and Postgres-backed state.
+- Worker process using Redis queue (RQ), Postgres-backed state, and GitHub App execution path for real draft PRs.
 - Policy engine enforcing repo allowlist, blocked commands, path restrictions, caps, and approvals.
 - Structured artifacts per job under `data/artifacts/{job_id}`.
 - Observability stack: Prometheus, Loki, Grafana, Alertmanager.
@@ -41,7 +42,7 @@ Safety-first local coding-agent platform optimized for externally useful output.
 
 ## Default safety behavior
 
-- New jobs only from `agent-ready` GitHub issue labels or explicit manual API.
+- New jobs from `agent-ready` GitHub issue labels, `/api/v1/intake/text`, or explicit manual API.
 - Default caps:
   - Per job: `$3`, `45m`, `8` iterations.
   - Daily: `$40`, Monthly: `$900`.
