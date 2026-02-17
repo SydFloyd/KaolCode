@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "codex-home"
+version = "0.1.0"
+description = "Codex-at-home safety-first coding agent platform."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+  { name = "Codex Home Operator" }
+]
+dependencies = [
+  "fastapi>=0.116.0",
+  "uvicorn[standard]>=0.33.0",
+  "pydantic>=2.10.0",
+  "pydantic-settings>=2.7.0",
+  "sqlalchemy>=2.0.36",
+  "psycopg[binary]>=3.2.3",
+  "redis>=5.2.1",
+  "rq>=1.16.2",
+  "prometheus-client>=0.21.1",
+  "pyyaml>=6.0.2",
+  "httpx>=0.28.1",
+  "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.4",
+  "pytest-cov>=6.0.0",
+  "ruff>=0.9.1",
+  "mypy>=1.14.1",
+]
+
+[project.scripts]
+codex-orchestrator = "codex_home.orchestrator:main"
+codex-worker = "codex_home.worker:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/codex_home"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_optional = true
+ignore_missing_imports = true

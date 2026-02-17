@@ -1,0 +1,57 @@
+version: 1
+
+repo_allowlist:
+  - SydFloyd/KaolCode
+
+sensitive_paths:
+  - infra/**
+  - .github/workflows/**
+  - secrets/**
+  - Dockerfile*
+  - terraform/**
+  - k8s/**
+  - .env*
+
+blocked_commands:
+  exact:
+    - "rm -rf /"
+    - "mkfs"
+    - "fdisk"
+    - "dd if="
+    - "shutdown -h now"
+    - "reboot"
+  regex:
+    - "(?i)\\brm\\s+-rf\\s+/(\\s|$)"
+    - "(?i)\\bterraform\\s+destroy\\b"
+    - "(?i)\\bkubectl\\s+delete\\s+namespace\\b"
+    - "(?i)\\bgit\\s+push\\s+--force\\b"
+
+domain_allowlist:
+  - api.github.com
+  - github.com
+  - objects.githubusercontent.com
+  - api.openai.com
+  - pypi.org
+  - files.pythonhosted.org
+  - registry.npmjs.org
+
+default_caps:
+  max_minutes: 45
+  max_iterations: 8
+  max_usd: 3.0
+
+max_parallel_jobs: 2
+max_usd_per_day: 40
+max_usd_per_month: 900
+
+approval_matrix:
+  code: ["merge"]
+  deps: ["merge"]
+  infra: ["infra", "merge"]
+  secrets: ["secrets", "merge"]
+  destructive: ["destructive", "merge"]
+
+secret_patterns:
+  - "(?i)aws(.{0,20})?(secret|access).{0,20}(key|token)"
+  - "(?i)ghp_[a-zA-Z0-9]{20,}"
+  - "(?i)sk-[a-zA-Z0-9]{20,}"

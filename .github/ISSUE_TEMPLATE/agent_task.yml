@@ -1,0 +1,36 @@
+name: Agent Task
+description: Intake template for Codex-at-home job queue.
+labels: ["agent-ready"]
+body:
+  - type: input
+    id: repo_scope
+    attributes:
+      label: Repo
+      description: owner/name format
+      placeholder: SydFloyd/KaolCode
+    validations:
+      required: true
+  - type: input
+    id: acceptance_commands
+    attributes:
+      label: Acceptance commands
+      description: Comma-separated commands
+      placeholder: pytest -q
+    validations:
+      required: true
+  - type: checkboxes
+    id: risk
+    attributes:
+      label: Risk markers
+      options:
+        - label: deps
+        - label: infra
+        - label: secrets
+        - label: destructive
+  - type: textarea
+    id: success_criteria
+    attributes:
+      label: Success criteria
+      description: Concrete completion checks.
+    validations:
+      required: true

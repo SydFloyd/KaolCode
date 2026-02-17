@@ -1,0 +1,11 @@
+[Unit]
+Description=Codex Home Postgres Backup
+After=docker.service
+
+[Service]
+Type=oneshot
+User=agent
+WorkingDirectory=/opt/codex-home
+Environment=BACKUP_ROOT=/opt/codex-home/backups
+Environment=RETENTION_DAYS=14
+ExecStart=/bin/bash /opt/codex-home/scripts/backup_postgres.sh

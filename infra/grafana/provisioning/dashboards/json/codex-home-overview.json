@@ -1,0 +1,72 @@
+{
+  "id": null,
+  "uid": "codex-home-v1",
+  "title": "Codex Home Overview",
+  "tags": ["codex-home"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Queue Depth",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "codex_queue_depth" }]
+    },
+    {
+      "type": "stat",
+      "title": "Pending Approvals",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "codex_pending_approvals" }]
+    },
+    {
+      "type": "stat",
+      "title": "Daily Spend (USD)",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "codex_spend_daily_usd" }]
+    },
+    {
+      "type": "stat",
+      "title": "Monthly Spend (USD)",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "codex_spend_monthly_usd" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Jobs Completed by Status",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "sum by (status) (rate(codex_jobs_completed_total[15m]))" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Job Stage Duration (p95)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, stage) (rate(codex_job_stage_duration_seconds_bucket[15m])))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker Heartbeat Timestamp",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "codex_worker_heartbeat_timestamp" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Total Job Cost (USD)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "codex_job_cost_usd_total" }]
+    }
+  ]
+}

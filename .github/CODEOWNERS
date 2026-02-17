@@ -1,0 +1,7 @@
+infra/** @your-org/platform-admins
+.github/workflows/** @your-org/platform-admins
+secrets/** @your-org/platform-admins
+Dockerfile* @your-org/platform-admins
+terraform/** @your-org/platform-admins
+k8s/** @your-org/platform-admins
+.env* @your-org/platform-admins

@@ -1,0 +1,31 @@
+groups:
+  - name: codex-home
+    rules:
+      - alert: OrchestratorDown
+        expr: up{job="orchestrator"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Orchestrator is down"
+      - alert: DailyBudgetNearLimit
+        expr: codex_spend_daily_usd > 36
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Daily spend is above 90% of budget"
+      - alert: JobFailureBurst
+        expr: increase(codex_jobs_completed_total{status="failed"}[30m]) >= 3
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Three or more jobs failed in 30 minutes"
+      - alert: KillSwitchActive
+        expr: codex_agents_enabled == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent kill switch is active"

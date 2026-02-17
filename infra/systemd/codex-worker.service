@@ -1,0 +1,17 @@
+[Unit]
+Description=Codex Home Worker
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=agent
+WorkingDirectory=/opt/codex-home
+EnvironmentFile=/opt/codex-home/.env
+ExecStart=/usr/bin/docker compose up worker
+ExecStop=/usr/bin/docker compose stop worker
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

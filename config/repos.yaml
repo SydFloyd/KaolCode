@@ -1,0 +1,15 @@
+repos:
+  - name: SydFloyd/KaolCode
+    enabled: true
+    base_branch: main
+    allowed_paths:
+      - src/**
+      - tests/**
+      - docs/**
+      - .github/workflows/**
+      - README.md
+      - pyproject.toml
+      - requirements*.txt
+      - package*.json
+    acceptance_commands:
+      - pytest -q
