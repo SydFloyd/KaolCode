@@ -42,6 +42,9 @@ Deliverables:
 Exit criteria:
 - 20/20 fast jobs complete with zero unsafe events.
 
+Status (2026-02-18):
+- Exit criteria met. Burn-in report: `docs/reports/m2_fast_lane_burnin_2026-02-18.md`.
+
 ### 3) Release Lane Validation (Week 2)
 
 Objective:
@@ -115,4 +118,4 @@ Exit criteria:
 
 ## Current Focus
 
-Active milestone: `2) Fast Lane Hardening`.
+Active milestone: `3) Release Lane Validation`.

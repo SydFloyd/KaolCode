@@ -67,6 +67,7 @@ Safety-first local coding-agent platform optimized for externally useful output.
 
 - `docs/operations_quickstart.md`
 - `docs/roadmap.md`
+- `docs/reports/m2_fast_lane_burnin_2026-02-18.md`
 - `docs/runbooks/incidents.md`
 - `docs/runbooks/triage_replay.md`
 - `docs/kpi_dashboard.md`
