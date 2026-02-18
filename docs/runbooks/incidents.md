@@ -44,3 +44,7 @@
 3. Recovery:
    - Replay queued jobs.
    - Document root cause and prevention.
+
+## Related Runbook
+
+- `docs/runbooks/triage_replay.md` for step-by-step job triage and replay.

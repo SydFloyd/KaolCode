@@ -17,7 +17,14 @@ from codex_home.db import build_engine, build_session_factory
 from codex_home.github_api import GitHubAppClient
 from codex_home.llm import LLMClient
 from codex_home.logging_utils import configure_logging
-from codex_home.metrics import JOBS_COMPLETED, JOB_COST, JOB_STAGE_DURATION, SPEND_DAILY, SPEND_MONTHLY, WORKER_HEARTBEAT
+from codex_home.metrics import (
+    JOBS_COMPLETED,
+    JOB_COST,
+    JOB_STAGE_DURATION,
+    SPEND_DAILY,
+    SPEND_MONTHLY,
+    WORKER_HEARTBEAT,
+)
 from codex_home.policy import load_policy
 from codex_home.queueing import agents_enabled, build_redis
 from codex_home.repository import Repository

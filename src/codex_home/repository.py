@@ -240,3 +240,13 @@ class Repository:
             .limit(limit)
         )
         return list(self.session.execute(stmt).scalars())
+
+    def list_failed_jobs(self, limit: int | None = None) -> Iterable[Job]:
+        stmt = (
+            select(Job)
+            .where(Job.status == JobStatus.FAILED.value)
+            .order_by(desc(Job.updated_at))
+        )
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        return list(self.session.execute(stmt).scalars())

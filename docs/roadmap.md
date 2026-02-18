@@ -115,5 +115,4 @@ Exit criteria:
 
 ## Current Focus
 
-Active milestone: `1) Baseline Lock`.
-
+Active milestone: `2) Fast Lane Hardening`.

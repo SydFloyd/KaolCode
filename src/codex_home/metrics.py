@@ -5,6 +5,17 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, ge
 
 JOBS_CREATED = Counter("codex_jobs_created_total", "Number of jobs created", ["source"])
 JOBS_COMPLETED = Counter("codex_jobs_completed_total", "Number of jobs completed", ["status"])
+JOB_FAILURES_TOTAL = Gauge("codex_job_failures_total", "Total number of failed jobs")
+JOB_FAILURES_BY_CATEGORY = Gauge(
+    "codex_job_failures_by_category",
+    "Failed jobs grouped by failure category",
+    ["category"],
+)
+JOB_FAILURES_BY_STAGE = Gauge(
+    "codex_job_failures_by_stage",
+    "Failed jobs grouped by stage",
+    ["stage"],
+)
 JOB_STAGE_DURATION = Histogram(
     "codex_job_stage_duration_seconds",
     "Duration by job stage",

@@ -11,6 +11,13 @@ docker compose up -d --build
 
 - `RUN_MODE=fast`: local-safe mode. `intake/text` queues jobs without creating GitHub issues or PRs.
 - `RUN_MODE=release`: GitHub-integrated mode. `intake/text` creates a GitHub issue and jobs can open draft PRs.
+- Queue retry defaults:
+  - `QUEUE_RETRY_MAX=2`
+  - `QUEUE_RETRY_INTERVALS=30,120`
+  - `QUEUE_JOB_TIMEOUT_SECONDS=3600`
+- Worker metrics defaults:
+  - `WORKER_METRICS_ENABLED=true`
+  - `WORKER_METRICS_PORT=9108` (Prometheus target: `worker:9108`)
 
 ## Create manual job
 
@@ -71,6 +78,10 @@ curl -X POST "http://localhost:8080/api/v1/jobs/<job_id>/reject" \
     "reason": "policy mismatch"
   }'
 ```
+
+## Triage and replay
+
+- Use `docs/runbooks/triage_replay.md` for failed-job triage and safe replay steps.
 
 ## Toggle kill switch
 

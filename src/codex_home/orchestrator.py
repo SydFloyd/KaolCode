@@ -11,9 +11,19 @@ from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Resp
 
 from codex_home.config import Settings, get_settings
 from codex_home.db import build_engine, build_session_factory, init_db
+from codex_home.failure_taxonomy import classify_failure_reason
 from codex_home.github_api import GitHubAppClient
 from codex_home.logging_utils import configure_logging
-from codex_home.metrics import AGENTS_ENABLED, JOBS_CREATED, PENDING_APPROVALS, QUEUE_DEPTH, render_metrics
+from codex_home.metrics import (
+    AGENTS_ENABLED,
+    JOBS_CREATED,
+    JOB_FAILURES_BY_CATEGORY,
+    JOB_FAILURES_BY_STAGE,
+    JOB_FAILURES_TOTAL,
+    PENDING_APPROVALS,
+    QUEUE_DEPTH,
+    render_metrics,
+)
 from codex_home.policy import load_policy, load_repo_profiles
 from codex_home.queueing import agents_enabled, build_redis, enqueue_job, queue_size, set_kill_switch
 from codex_home.repository import Repository
@@ -105,6 +115,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         with session_factory() as session:
             repository = Repository(session)
             PENDING_APPROVALS.set(repository.pending_approval_count())
+            failed_jobs = repository.list_failed_jobs(limit=5000)
+
+        category_counts: dict[str, int] = {}
+        stage_counts: dict[str, int] = {}
+        for failed in failed_jobs:
+            category = classify_failure_reason(failed.failure_reason)
+            stage = failed.current_stage or "unknown"
+            category_counts[category] = category_counts.get(category, 0) + 1
+            stage_counts[stage] = stage_counts.get(stage, 0) + 1
+
+        JOB_FAILURES_TOTAL.set(len(failed_jobs))
+        JOB_FAILURES_BY_CATEGORY.clear()
+        for category, count in category_counts.items():
+            JOB_FAILURES_BY_CATEGORY.labels(category=category).set(count)
+        JOB_FAILURES_BY_STAGE.clear()
+        for stage, count in stage_counts.items():
+            JOB_FAILURES_BY_STAGE.labels(stage=stage).set(count)
+
         QUEUE_DEPTH.set(queue_size(settings, redis_client))
         AGENTS_ENABLED.set(1 if agents_enabled(redis_client) else 0)
         payload, content_type = render_metrics()

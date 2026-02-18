@@ -15,6 +15,7 @@ Safety-first local coding-agent platform optimized for externally useful output.
   - `POST /api/v1/control/resume`
   - `GET /metrics`
 - Worker process using Redis queue (RQ), Postgres-backed state, and GitHub App execution path for real draft PRs.
+- Worker exposes Prometheus metrics on `WORKER_METRICS_PORT` (default `9108`) for failure/cost telemetry.
 - Policy engine enforcing repo allowlist, blocked commands, path restrictions, caps, and approvals.
 - Structured artifacts per job under `data/artifacts/{job_id}`.
 - Observability stack: Prometheus, Loki, Grafana, Alertmanager.
@@ -46,6 +47,7 @@ Safety-first local coding-agent platform optimized for externally useful output.
 - New jobs from `agent-ready` GitHub issue labels, `/api/v1/intake/text`, or explicit manual API.
 - `RUN_MODE=fast`: no GitHub writes, synthetic local issue ids, no PR creation.
 - `RUN_MODE=release`: real GitHub issue + draft PR workflow.
+- Queue retries default to `2` attempts with `30s,120s` backoff (`QUEUE_RETRY_*` env vars).
 - Default caps:
   - Per job: `$3`, `45m`, `8` iterations.
   - Daily: `$40`, Monthly: `$900`.
@@ -66,6 +68,7 @@ Safety-first local coding-agent platform optimized for externally useful output.
 - `docs/operations_quickstart.md`
 - `docs/roadmap.md`
 - `docs/runbooks/incidents.md`
+- `docs/runbooks/triage_replay.md`
 - `docs/kpi_dashboard.md`
 - `docs/pi_migration.md`
 - `docs/pilot_projects.md`

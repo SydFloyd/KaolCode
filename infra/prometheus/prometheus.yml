@@ -6,6 +6,9 @@ scrape_configs:
   - job_name: orchestrator
     static_configs:
       - targets: ["orchestrator:8080"]
+  - job_name: worker
+    static_configs:
+      - targets: ["worker:9108"]
 
 rule_files:
   - /etc/prometheus/alerts.yml

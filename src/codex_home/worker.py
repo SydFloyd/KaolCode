@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 
+from prometheus_client import start_http_server
 from redis import Redis
 from rq import Worker
 
@@ -45,6 +46,15 @@ def run_worker(redis_client: Redis) -> None:
 
 def main() -> None:
     settings, redis_client = bootstrap_state()
+    if settings.worker_metrics_enabled:
+        start_http_server(
+            addr=settings.worker_metrics_host,
+            port=settings.worker_metrics_port,
+        )
+        logger.info(
+            "Worker metrics endpoint started",
+            extra={"host": settings.worker_metrics_host, "port": settings.worker_metrics_port},
+        )
     WORKER_HEARTBEAT.set(time.time())
     logger.info("Worker bootstrap complete", extra={"queue": settings.queue_name})
     run_worker(redis_client)
