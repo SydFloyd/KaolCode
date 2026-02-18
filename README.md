@@ -26,6 +26,7 @@ Safety-first local coding-agent platform optimized for externally useful output.
    ```bash
    cp .env.example .env
    ```
+   Set `RUN_MODE=fast` for local-safe operation or `RUN_MODE=release` for live GitHub issue/PR flow.
 2. Start stack:
    ```bash
    docker compose up -d --build
@@ -43,6 +44,8 @@ Safety-first local coding-agent platform optimized for externally useful output.
 ## Default safety behavior
 
 - New jobs from `agent-ready` GitHub issue labels, `/api/v1/intake/text`, or explicit manual API.
+- `RUN_MODE=fast`: no GitHub writes, synthetic local issue ids, no PR creation.
+- `RUN_MODE=release`: real GitHub issue + draft PR workflow.
 - Default caps:
   - Per job: `$3`, `45m`, `8` iterations.
   - Daily: `$40`, Monthly: `$900`.
@@ -61,6 +64,7 @@ Safety-first local coding-agent platform optimized for externally useful output.
 ## Additional docs
 
 - `docs/operations_quickstart.md`
+- `docs/roadmap.md`
 - `docs/runbooks/incidents.md`
 - `docs/kpi_dashboard.md`
 - `docs/pi_migration.md`

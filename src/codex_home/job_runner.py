@@ -40,9 +40,9 @@ def _run_stage(name: str, fn):
         JOB_STAGE_DURATION.labels(stage=name).observe(time.monotonic() - start)
 
 
-def _run_command(command: str, timeout_seconds: int, cwd: Path, dry_run: bool) -> tuple[int, str]:
-    if dry_run:
-        return 0, f"DRY_RUN validated command: {command}\n"
+def _run_command(command: str, timeout_seconds: int, cwd: Path, fast_mode: bool) -> tuple[int, str]:
+    if fast_mode:
+        return 0, f"FAST_MODE validated command: {command}\n"
 
     if shutil.which("docker"):
         docker_cmd = [
@@ -145,6 +145,7 @@ def process_job(job_id: str) -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
     WORKER_HEARTBEAT.set(time.time())
+    fast_mode = settings.is_fast_mode()
 
     engine = build_engine(settings.database_url)
     session_factory = build_session_factory(engine)
@@ -203,7 +204,7 @@ def process_job(job_id: str) -> None:
         changed_paths: list[str] = []
 
         try:
-            if not settings.dry_run:
+            if settings.is_release_mode():
                 issue = github.get_issue(job.repo, job.issue_number)
                 issue_title = issue.title or issue_title
                 issue_body = issue.body or ""
@@ -265,7 +266,7 @@ def process_job(job_id: str) -> None:
 
                 def execute_stage() -> None:
                     nonlocal changed_paths
-                    if settings.dry_run:
+                    if fast_mode:
                         changed_paths = ["README.md"]
                         patch = (
                             "--- a/README.md\n"
@@ -389,7 +390,7 @@ def process_job(job_id: str) -> None:
                             command=command,
                             timeout_seconds=min(job.caps_max_minutes * 60, 1200),
                             cwd=execution_cwd,
-                            dry_run=settings.dry_run,
+                            fast_mode=fast_mode,
                         )
                         outputs.append(f"$ {command}\n{output}\n")
                         if code != 0:
@@ -420,8 +421,8 @@ def process_job(job_id: str) -> None:
                 repo.update_job_status(job, JobStatus.RUNNING, stage="pr")
 
                 def pr_stage() -> None:
-                    if settings.dry_run:
-                        pr_url = f"https://github.com/{job.repo}/pull/{job.issue_number}"
+                    if fast_mode:
+                        pr_url = None
                     else:
                         if not repo_workspace.exists():
                             raise RuntimeError("WORKSPACE_NOT_READY")
@@ -496,7 +497,8 @@ def process_job(job_id: str) -> None:
                             indent=2,
                         ),
                     )
-                    repo.add_job_event(job_id, "pr", "completed", "Draft PR prepared.")
+                    message = "Fast mode completed (no PR created)." if fast_mode else "Draft PR prepared."
+                    repo.add_job_event(job_id, "pr", "completed", message)
                     repo.update_job_status(job, JobStatus.COMPLETED, stage="pr", pr_url=pr_url)
 
                 _run_stage("pr", pr_stage)

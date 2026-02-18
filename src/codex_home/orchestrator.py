@@ -4,7 +4,7 @@ import json
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import uvicorn
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, Response, status
@@ -36,6 +36,11 @@ logger = logging.getLogger(__name__)
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _local_issue_number() -> int:
+    # Synthetic issue id for fast-mode intake jobs that do not create GitHub issues.
+    return int(uuid4().int % 2_000_000_000) + 1
 
 
 def _detect_risk(labels: list[str]) -> RiskClass:
@@ -217,17 +222,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if not policy.repo_allowed(payload.repo):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Repo not in allowlist.")
 
-        github = GitHubAppClient(settings)
         labels = sorted({label for label in payload.labels if label.lower() != "agent-ready"})
-        try:
-            issue = github.create_issue(
-                repo=payload.repo,
-                title=payload.title,
-                body=payload.body,
-                labels=labels,
-            )
-        except RuntimeError as exc:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+        if settings.is_release_mode():
+            github = GitHubAppClient(settings)
+            try:
+                issue = github.create_issue(
+                    repo=payload.repo,
+                    title=payload.title,
+                    body=payload.body,
+                    labels=labels,
+                )
+                issue_number = int(issue.number)
+            except RuntimeError as exc:
+                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+        else:
+            issue_number = _local_issue_number()
 
         with session_factory() as session:
             repository = Repository(session)
@@ -238,7 +247,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             caps = payload.caps or policy.default_caps
             spec = JobSpecV1(
                 repo=payload.repo,
-                issue_number=issue.number,
+                issue_number=issue_number,
                 base_branch=payload.base_branch or profile.default_base_branch,
                 risk_class=payload.risk_class,
                 model_profile=payload.model_profile,
@@ -251,7 +260,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
             created = repository.create_job(spec)
             enqueue_job(settings, redis_client, created.job_id)
-            JOBS_CREATED.labels(source="text_intake").inc()
+            source = "text_intake_release" if settings.is_release_mode() else "text_intake_fast"
+            JOBS_CREATED.labels(source=source).inc()
             return _build_job_response(created)
 
     @app.get(

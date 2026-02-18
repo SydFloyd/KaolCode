@@ -77,7 +77,7 @@ class Repository:
             job.current_stage = stage
         if reason:
             job.failure_reason = reason
-        if pr_url:
+        if pr_url is not None:
             job.pr_url = pr_url
         self.session.add(job)
         self.session.commit()

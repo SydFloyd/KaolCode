@@ -1,7 +1,11 @@
 from functools import lru_cache
+from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+RunMode = Literal["fast", "release"]
 
 
 class Settings(BaseSettings):
@@ -26,7 +30,7 @@ class Settings(BaseSettings):
 
     auto_migrate: bool = Field(default=True, alias="AUTO_MIGRATE")
     disable_queue: bool = Field(default=False, alias="DISABLE_QUEUE")
-    dry_run: bool = Field(default=True, alias="DRY_RUN")
+    run_mode: RunMode = Field(default="fast", alias="RUN_MODE")
 
     max_usd_per_day: float = Field(default=40.0, alias="MAX_USD_PER_DAY")
     max_usd_per_month: float = Field(default=900.0, alias="MAX_USD_PER_MONTH")
@@ -36,6 +40,7 @@ class Settings(BaseSettings):
     model_review: str = Field(default="gpt-4.1-mini", alias="MODEL_REVIEW")
 
     litellm_base_url: str = Field(default="http://localhost:4000", alias="LITELLM_BASE_URL")
+    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     litellm_api_key: str = Field(default="", alias="LITELLM_API_KEY")
 
     github_app_id: str = Field(default="", alias="GITHUB_APP_ID")
@@ -45,8 +50,20 @@ class Settings(BaseSettings):
     api_host: str = Field(default="0.0.0.0", alias="API_HOST")
     api_port: int = Field(default=8080, alias="API_PORT")
 
+    @field_validator("run_mode", mode="before")
+    @classmethod
+    def normalize_run_mode(cls, value):
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+    def is_fast_mode(self) -> bool:
+        return self.run_mode == "fast"
+
+    def is_release_mode(self) -> bool:
+        return self.run_mode == "release"
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()
-

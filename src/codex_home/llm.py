@@ -21,9 +21,9 @@ class LLMClient:
         self.settings = settings
 
     def generate(self, model: str, prompt: str, max_tokens: int = 400) -> LLMResult:
-        if self.settings.dry_run:
+        if self.settings.is_fast_mode():
             synthetic = (
-                "DRY_RUN_RESPONSE\n"
+                "FAST_MODE_RESPONSE\n"
                 "Generated deterministic planning text.\n"
                 f"Prompt length: {len(prompt)} characters."
             )
@@ -65,4 +65,3 @@ class LLMClient:
             cost_usd=cost,
             model=model,
         )
-

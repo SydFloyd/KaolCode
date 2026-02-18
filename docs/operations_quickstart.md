@@ -7,6 +7,11 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
+## Select run mode
+
+- `RUN_MODE=fast`: local-safe mode. `intake/text` queues jobs without creating GitHub issues or PRs.
+- `RUN_MODE=release`: GitHub-integrated mode. `intake/text` creates a GitHub issue and jobs can open draft PRs.
+
 ## Create manual job
 
 ```bash
@@ -22,7 +27,7 @@ curl -X POST "http://localhost:8080/api/v1/jobs" \
   }'
 ```
 
-## Create issue + queue job from plain text
+## Queue job from plain text
 
 ```bash
 curl -X POST "http://localhost:8080/api/v1/intake/text" \
@@ -38,6 +43,9 @@ curl -X POST "http://localhost:8080/api/v1/intake/text" \
     "created_by": "operator"
   }'
 ```
+
+In `release` mode, this endpoint creates a real GitHub issue and uses that issue number.
+In `fast` mode, it skips GitHub issue creation and uses a synthetic local issue id.
 
 ## Approve gated job
 
